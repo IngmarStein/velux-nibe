@@ -1,0 +1,16 @@
+version: "2.4"
+services:
+  velux-nibe:
+    image: ingmarstein/velux-nibe:latest
+    command: ["-targetTemp", "210", "-interval", "60"]
+    environment:
+      VELUX_USERNAME: ""
+      VELUX_PASSWORD: ""
+      NIBE_CLIENT_ID: ""
+      NIBE_CLIENT_SECRET: ""
+      NIBE_CALLBACK_URL: ""
+      NIBE_SYSTEM_ID: ""
+      TZ: "Europe/Berlin"
+    restart: unless-stopped
+    volumes:
+    - ./nibe-token.json:/nibe-token-json
