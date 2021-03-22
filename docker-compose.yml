@@ -13,4 +13,4 @@ services:
       TZ: "Europe/Berlin"
     restart: unless-stopped
     volumes:
-    - ./nibe-token.json:/nibe-token-json
+    - ./nibe-token.json:/nibe-token.json
