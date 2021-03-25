@@ -6,6 +6,7 @@ import (
 	"os"
 	"strconv"
 	"time"
+	_ "time/tzdata"
 	"velux-nibe/nibe"
 	"velux-nibe/velux"
 )
@@ -29,7 +30,20 @@ var verbose = flag.Bool("verbose", false, "Verbose mode")
 var targetTemp = flag.Int("targetTemp", 210, "Target temperature in celsius, multiplied by ten")
 var pollInterval = flag.Int("interval", 60, "Polling interval in seconds")
 
+// https://medium.com/@mhcbinder/using-local-time-in-a-golang-docker-container-built-from-scratch-2900af02fbaf
+func updateTimezone() {
+	if tz := os.Getenv("TZ"); tz != "" {
+		var err error
+		time.Local, err = time.LoadLocation(tz)
+		if err != nil {
+			log.Printf("error loading location '%s': %v\n", tz, err)
+		}
+	}
+}
+
 func main() {
+	updateTimezone()
+
 	flag.Parse()
 
 	if *username == "" ||
@@ -61,7 +75,8 @@ func main() {
 		case <-ticker.C:
 			homeData, err := veluxClient.GetHomesData(velux.GetHomesDataRequest{GatewayTypes: []string{velux.Bridge}})
 			if err != nil {
-				log.Fatalf("error getting home data: %v", err)
+				log.Printf("error getting home data: %v", err)
+				continue
 			}
 
 			for _, home := range homeData.Body.Homes {
