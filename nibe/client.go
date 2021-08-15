@@ -26,7 +26,7 @@ type Client struct {
 	client *http.Client
 }
 
-// NewClient returns a new NIBE API client using the supplied credentials.
+// NewClientWithAuth returns a new NIBE API client using the supplied credentials.
 func NewClientWithAuth(clientID, clientSecret, callbackURL, tokenFileName string) *Client {
 	conf := &oauth2.Config{
 		ClientID:     clientID,
