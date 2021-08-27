@@ -1,4 +1,4 @@
-module velux-nibe
+module github.com/ingmarstein/velux-nibe
 
 go 1.17
 

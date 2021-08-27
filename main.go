@@ -7,8 +7,9 @@ import (
 	"strconv"
 	"time"
 	_ "time/tzdata"
-	"velux-nibe/nibe"
-	"velux-nibe/velux"
+
+	"github.com/ingmarstein/velux-nibe/nibe"
+	"github.com/ingmarstein/velux-nibe/velux"
 )
 
 func lenientParseInt(s string) int {
