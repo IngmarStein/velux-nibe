@@ -19,7 +19,7 @@ var Endpoint = oauth2.Endpoint{
 const ScopeRead = "READSYSTEM"
 const ScopeWrite = "WRITESYSTEM"
 
-// Retrieve a token, saves the token, then returns the generated client.
+// GetAuthClient retrieves a token, saves it, and returns the generated client.
 func GetAuthClient(config *oauth2.Config, tokenFileName string) *http.Client {
 	// The file token.json stores the user's access and refresh tokens, and is
 	// created automatically when the authorization flow completes for the first

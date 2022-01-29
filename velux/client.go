@@ -30,7 +30,7 @@ type Client struct {
 	client *http.Client
 }
 
-// NewClient returns a new Velux API client using the supplied credentials.
+// NewClientWithAuth returns a new Velux API client using the supplied credentials.
 func NewClientWithAuth(username, password string) *Client {
 	conf := &oauth2.Config{
 		ClientID:     clientID,

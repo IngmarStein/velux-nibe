@@ -22,7 +22,7 @@ func lenientParseInt(s string) int {
 
 var username = flag.String("velux-user", os.Getenv("VELUX_USERNAME"), "Velux user name")
 var password = flag.String("velux-password", os.Getenv("VELUX_PASSWORD"), "Velux password")
-var clientID = flag.String("nibe-client-id", os.Getenv("NIBE_CLIENT_ID"), "NIBE Uplinkg client ID")
+var clientID = flag.String("nibe-client-id", os.Getenv("NIBE_CLIENT_ID"), "NIBE Uplink client ID")
 var clientSecret = flag.String("nibe-client-secret", os.Getenv("NIBE_CLIENT_SECRET"), "NIBE Uplink client secret")
 var callbackURL = flag.String("nibe-callback", os.Getenv("NIBE_CALLBACK_URL"), "NIBE Uplink callback URL")
 var system = flag.Int("nibe-system", lenientParseInt(os.Getenv("NIBE_SYSTEM_ID")), "Nibe system id")
@@ -62,7 +62,7 @@ func main() {
 	}
 
 	log.Println("Creating NIBE client")
-	nibeClient := nibe.NewClientWithAuth(*clientID, *clientSecret, *callbackURL, *nibeTokenFile)
+	nibeClient := nibe.NewClientWithAuth(*clientID, *clientSecret, *callbackURL, *nibeTokenFile, []string{nibe.ScopeWrite})
 	nibeClient.Verbose = *verbose
 
 	log.Println("Creating Velux client")
