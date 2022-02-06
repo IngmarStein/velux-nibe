@@ -120,26 +120,6 @@ func (c *Client) do(req *http.Request, v interface{}) (*http.Response, error) {
 	return resp, err
 }
 
-type SetThermostatRequest struct {
-	SystemID int
-	// 	Id number set by the smart home system
-	ExternalId int `json:"externalId"`
-	// Human readable name for the thermostat
-	Name string `json:"name"`
-	// 	Optional, actual temperature in deg. Celsius, multiplied by 10.
-	ActualTemp int `json:"actualTemp"`
-	// 	Optional, target temperature in deg. Celsius, multiplied by 10.
-	TargetTemp int `json:"targetTemp"`
-	// 	Optional, valve position. Number of percent open.
-	ValvePosition int `json:"valvePosition"`
-	// 	Optional, list of climate systems this thermostat affects.
-	ClimateSystems []int `json:"climateSystems"`
-}
-
-type GetSystemStatusRequest struct {
-	SystemID int
-}
-
 type ImageSize struct {
 	// Width
 	Width int `json:"width"`
@@ -185,7 +165,48 @@ type StatusIconItem struct {
 	Parameters []Parameter `json:"parameters"`
 }
 
+type Category struct {
+	CategoryID string      `json:"categoryId"`
+	Name       string      `json:"name"`
+	Parameters []Parameter `json:"parameters"`
+}
+
+type SetThermostatRequest struct {
+	SystemID int
+	// 	Id number set by the smart home system
+	ExternalId int `json:"externalId"`
+	// Human readable name for the thermostat
+	Name string `json:"name"`
+	// 	Optional, actual temperature in deg. Celsius, multiplied by 10.
+	ActualTemp int `json:"actualTemp"`
+	// 	Optional, target temperature in deg. Celsius, multiplied by 10.
+	TargetTemp int `json:"targetTemp"`
+	// 	Optional, valve position. Number of percent open.
+	ValvePosition int `json:"valvePosition"`
+	// 	Optional, list of climate systems this thermostat affects.
+	ClimateSystems []int `json:"climateSystems"`
+}
+
+type GetSystemStatusRequest struct {
+	SystemID int
+}
+
 type GetSystemStatusResponse []StatusIconItem
+
+type GetSystemParametersRequest struct {
+	SystemID     int
+	ParameterIDs []string
+}
+
+type GetSystemParametersResponse []Parameter
+
+type GetServiceInfoCategoriesRequest struct {
+	SystemID     int
+	SystemUnitID int
+	Parameters   bool
+}
+
+type GetServiceInfoCategoriesResponse []Category
 
 // SetThermostat upload thermostat data to NIBE Uplink.
 // Use the ExternalId parameter to identify which thermostat to update, if it
@@ -219,6 +240,34 @@ func (c *Client) GetSystemStatus(request GetSystemStatusRequest) (GetSystemStatu
 		return nil, err
 	}
 	var response GetSystemStatusResponse
+	_, err = c.do(req, &response)
+	return response, err
+}
+
+func (c *Client) GetSystemParameters(request GetSystemParametersRequest) (GetSystemParametersResponse, error) {
+	u := fmt.Sprintf("systems/%d/parameters", request.SystemID)
+
+	req, err := c.NewRequest("GET", u, request)
+	if err != nil {
+		return nil, err
+	}
+	var response GetSystemParametersResponse
+	_, err = c.do(req, &response)
+	return response, err
+}
+
+func (c *Client) GetServiceInfoCategories(request GetServiceInfoCategoriesRequest) (GetServiceInfoCategoriesResponse, error) {
+	includeParameters := "false"
+	if request.Parameters {
+		includeParameters = "true"
+	}
+	u := fmt.Sprintf("systems/%d/serviceinfo/categories?systemUnitId=%d&parameters=%s", request.SystemID, request.SystemUnitID, includeParameters)
+
+	req, err := c.NewRequest("GET", u, request)
+	if err != nil {
+		return nil, err
+	}
+	var response GetServiceInfoCategoriesResponse
 	_, err = c.do(req, &response)
 	return response, err
 }
