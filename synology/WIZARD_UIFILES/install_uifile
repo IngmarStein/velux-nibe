@@ -17,7 +17,7 @@
         "subitems": [{
             "key": "VELUX_PASSWORD",
             "desc": "Password",
-            "defaultValue": "502",
+            "defaultValue": "",
             "validator": {
                 "allowBlank": false
             }
@@ -28,7 +28,7 @@
         "subitems": [{
             "key": "NIBE_CLIENT_ID",
             "desc": "Client ID",
-            "defaultValue": "5",
+            "defaultValue": "",
             "validator": {
                 "allowBlank": false
             }
@@ -39,7 +39,7 @@
         "subitems": [{
             "key": "NIBE_CLIENT_SECRET",
             "desc": "Client secret",
-            "defaultValue": "500",
+            "defaultValue": "",
             "validator": {
                 "allowBlank": false
             }
