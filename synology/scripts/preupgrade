@@ -1,0 +1,9 @@
+#!/bin/sh
+
+# backup of config file before upgrade
+/bin/cp -f "${SYNOPKG_PKGDEST}/velux-nibe.conf" "${SYNOPKG_TEMP_UPGRADE_FOLDER}"
+
+# backup of token file before upgrade
+/bin/cp -f "${SYNOPKG_PKGDEST}/nibe-token.json" "${SYNOPKG_TEMP_UPGRADE_FOLDER}"
+
+exit 0

@@ -1,2 +1,8 @@
 /velux-nibe
 /nibe-token.json
+
+# Packages
+synology/bin/velux-nibe
+synology/package.tgz
+synology/*.spk
+synology/INFO

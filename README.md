@@ -48,6 +48,36 @@ docker run -v nibe-token.json:/nibe-token.json --env VELUX_USERNAME=xxx --env VE
 
 Alternatively, use the included `docker-compose.yml` file as a template if you prefer to use Docker Compose.
 
+#### On a Synology NAS
+
+##### Add the Velux-Nibe Synology Package Source
+
+1. Open Package Center in DSM and select the `Settings` option.
+2. Select the `Package Sources` tab.
+3. Click `Add`
+4. In the `Name` section enter `Velux-Nibe`
+5. In the `Location` section enter `https://ingmarstein.github.io/velux-nibe/`
+6. Click `OK`
+
+##### Install Velux-Nibe
+
+1. Go back to Package Center and search for `Velux-Nibe`
+2. Click on the `Velux-Nibe` package then select `Install`
+3. Click `Agree` when warned about using a package from an unknown publisher
+4. Click `Done` to confirm installation
+5. Provide the configuration parameters
+
+##### velux-nibe.conf
+
+> If you upgrade your existing Velux-Nibe package, no changes will be made to the `velux-nibe.conf` file. If you want
+> to overwrite your `velux-nibe.conf` configuration with the default one, please uninstall and install the package
+> again.
+
+You can customize the configuration of Velux-Nibe by using the config file at
+`/var/packages/velux-nibe/target/velux-nibe.conf`.  
+Please **stop** the package **before** changing the configuration.  
+If you have edited the configuration while Velux-Nibe is running, please **restart** the Velux-Nibe package.
+
 ### 4. Enable Smart Home mode
 
 Once `velux-nibe` is running, it is polling your thermostats in the defined interval and submits the current values (as well as the specified target temperature) to NIBE Uplink. You can verify the data in the portal in the section "My Systems > System > Smart Home > Thermostats".

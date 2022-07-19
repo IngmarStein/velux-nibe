@@ -1,0 +1,9 @@
+#!/bin/sh
+
+# restore config file
+/bin/cp -f "${SYNOPKG_TEMP_UPGRADE_FOLDER}/velux-nibe.conf" "${SYNOPKG_PKGDEST}"
+
+# restore token file
+/bin/cp -f "${SYNOPKG_TEMP_UPGRADE_FOLDER}/nibe-token.json" "${SYNOPKG_PKGDEST}"
+
+exit 0

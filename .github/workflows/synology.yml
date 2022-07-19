@@ -1,0 +1,67 @@
+name: Build Synology Package (SPK)
+on:
+  push:
+    branches:
+      - main
+permissions:
+  contents: write
+jobs:
+  build:
+    name: Build and package
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.18.4
+
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Build
+        env:
+          GOOS: linux
+          GOARCH: amd64
+          GOPROXY: "https://proxy.golang.org"
+        run: go build -v
+
+      - name: Get current time
+        run: echo "TIMESTAMP=$(date +'%Y.%m.%d-%s')" >> $GITHUB_ENV
+
+      - name: Package
+        env:
+          SPK_ARCH: x86_64
+          SPK_PACKAGE_VERSION: ${{ env.TIMESTAMP }}
+          SPK_PACKAGE_SUFFIX: latest
+        run: ./.ci/build-package.sh
+
+      - name: Archive package
+        uses: actions/upload-artifact@v3
+        with:
+          name: Synology package
+          path: synology/velux-nibe-x86_64-latest.spk
+
+      - name: Update latest release
+        uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "latest"
+          prerelease: true
+          title: "Development Build"
+          files: |
+            synology/velux-nibe-x86_64-latest.spk
+
+      - name: Generate repository JSON
+        env:
+          SPK_ARCH: x86_64
+          SPK_PACKAGE_VERSION: ${{ env.TIMESTAMP }}
+          SPK_PACKAGE_SUFFIX: latest
+          SPK_PACKAGE_URL: https://github.com/IngmarStein/velux-nibe/releases/download/latest/velux-nibe-x86_64-latest.spk
+        run: |
+          mkdir -p repo
+          ./synology/repo/index.json.sh > ./repo/index.json
+
+      - name: Deploy 🚀
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: repo

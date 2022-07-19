@@ -1,0 +1,92 @@
+[{
+    "step_title": "Velux-Nibe configuration",
+    "items": [{
+        "type": "textfield",
+        "desc": "Velux user name",
+        "subitems": [{
+            "key": "VELUX_USERNAME",
+            "desc": "User name",
+            "defaultValue": "",
+            "validator": {
+                "allowBlank": false
+            }
+        }]
+    }, {
+        "type": "textfield",
+        "desc": "Velux password",
+        "subitems": [{
+            "key": "VELUX_PASSWORD",
+            "desc": "Password",
+            "defaultValue": "502",
+            "validator": {
+                "allowBlank": false
+            }
+        }]
+    }, {
+        "type": "textfield",
+        "desc": "NIBE Uplink client ID",
+        "subitems": [{
+            "key": "NIBE_CLIENT_ID",
+            "desc": "Client ID",
+            "defaultValue": "5",
+            "validator": {
+                "allowBlank": false
+            }
+        }]
+    }, {
+        "type": "textfield",
+        "desc": "NIBE Uplink client secret",
+        "subitems": [{
+            "key": "NIBE_CLIENT_SECRET",
+            "desc": "Client secret",
+            "defaultValue": "500",
+            "validator": {
+                "allowBlank": false
+            }
+        }]
+    }, {
+        "type": "textfield",
+        "desc": "NIBE Uplink callback URL",
+        "subitems": [{
+            "key": "NIBE_CALLBACK_URL",
+            "desc": "URL",
+            "defaultValue": "",
+            "validator": {
+                "allowBlank": true
+            }
+        }]
+    }, {
+        "type": "textfield",
+        "desc": "NIBE System ID",
+        "subitems": [{
+            "key": "NIBE_SYSTEM_ID",
+            "desc": "System ID",
+            "defaultValue": "",
+            "validator": {
+                "allowBlank": false
+            }
+        }]
+    }, {
+        "type": "textfield",
+        "desc": "Target temperature in celsius, multiplied by ten (e.g. 210 for 21.0°C)",
+        "subitems": [{
+            "key": "TARGET_TEMP",
+            "desc": "Temperature",
+            "defaultValue": "210",
+            "validator": {
+                "allowBlank": false
+            }
+        }]
+    }, {
+        "type": "textfield",
+        "desc": "Polling interval in seconds",
+        "subitems": [{
+            "key": "POLL_INTERVAL",
+            "desc": "Interval",
+            "defaultValue": "60",
+            "validator": {
+                "allowBlank": false
+            }
+        }]
+    }]
+}]

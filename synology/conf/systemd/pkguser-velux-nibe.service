@@ -1,0 +1,11 @@
+[Unit]
+Description=Velux-nibe
+After=network-online.target
+
+[Service]
+Type=simple
+Slice=Velux-nibe.slice
+ExecStart=/var/packages/velux-nibe/target/bin/start.sh
+Restart=always
+RestartSec=3
+KillMode=process

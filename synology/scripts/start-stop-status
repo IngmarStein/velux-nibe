@@ -1,0 +1,19 @@
+#!/bin/bash
+case "$1" in
+start)
+  synosystemctl start pkguser-velux-nibe
+  ;;
+stop)
+  synosystemctl stop pkguser-velux-nibe
+  ;;
+status)
+  ;;
+log)
+  exec tail -n 100 -f "/var/packages/velux-nibe/target/velux-nibe.log"
+  ;;
+*)
+  echo "Usage: $0 {start|stop|status}" >&2
+  exit 1
+  ;;
+esac
+exit 0
