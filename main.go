@@ -106,7 +106,7 @@ func main() {
 						log.Printf("Home %s - room %s: failed to parse room ID: %v", home.Name, roomName, err)
 						continue
 					}
-					nibeClient.SetThermostat(nibe.SetThermostatRequest{
+					err = nibeClient.SetThermostat(nibe.SetThermostatRequest{
 						SystemID:       *system,
 						ExternalId:     externalId,
 						Name:           roomName,
@@ -114,6 +114,9 @@ func main() {
 						TargetTemp:     *targetTemp,
 						ClimateSystems: []int{1},
 					})
+					if err != nil {
+						log.Printf("Failed to set thermostat %d in room %s: %v", externalId, roomName, err)
+					}
 				}
 			}
 		}
