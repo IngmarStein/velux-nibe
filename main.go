@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"log"
+	"math"
 	"os"
 	"strconv"
 	"time"
@@ -108,7 +109,7 @@ func main() {
 					}
 					err = nibeClient.SetThermostat(nibe.SetThermostatRequest{
 						SystemID:       *system,
-						ExternalId:     externalId,
+						ExternalId:     externalId % math.MaxInt32, // The NIBE Uplink API doesn't accept values > 2^31
 						Name:           roomName,
 						ActualTemp:     room.Temperature,
 						TargetTemp:     *targetTemp,
