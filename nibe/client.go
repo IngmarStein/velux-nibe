@@ -103,6 +103,9 @@ func (c *Client) do(req *http.Request, v interface{}) (*http.Response, error) {
 	}
 
 	resp, err := c.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
 
 	if c.Verbose {
 		if d, err := httputil.DumpResponse(resp, true); err == nil {
@@ -110,9 +113,6 @@ func (c *Client) do(req *http.Request, v interface{}) (*http.Response, error) {
 		}
 	}
 
-	if err != nil {
-		return nil, err
-	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusNoContent {
 		err = json.NewDecoder(resp.Body).Decode(v)
