@@ -1,12 +1,13 @@
 #!/bin/bash
 case "$1" in
 start)
-  synosystemctl start pkguser-velux-nibe
+  synosystemctl start pkgctl-velux-nibe
   ;;
 stop)
-  synosystemctl stop pkguser-velux-nibe
+  synosystemctl stop pkgctl-velux-nibe
   ;;
 status)
+  synosystemctl get-active-status pkgctl-velux-nibe
   ;;
 log)
   exec tail -n 100 -f "/var/packages/velux-nibe/target/velux-nibe.log"
