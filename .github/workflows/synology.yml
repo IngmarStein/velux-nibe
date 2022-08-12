@@ -3,8 +3,12 @@ on:
   push:
     branches:
       - main
+    # Allow to run this workflow manually from the Actions tab
+    workflow_dispatch:
 permissions:
   contents: write
+  pages: write
+  id-token: write
 jobs:
   build:
     name: Build and package
@@ -62,7 +66,19 @@ jobs:
           mkdir -p repo
           ./synology/repo/index.json.sh > ./repo/index.json
 
-      - name: Deploy 🚀
-        uses: JamesIves/github-pages-deploy-action@v4
+      - name: Setup Pages
+        uses: actions/configure-pages@v1
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v1
         with:
-          folder: repo
+          path: repo
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v1
