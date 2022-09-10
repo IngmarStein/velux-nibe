@@ -1,18 +1,25 @@
 #!/bin/bash
-if [ "${EUID}" -eq 0 ]; then
-  UNIT="pkgctl-velux-nibe"
-else
-  UNIT="pkguser-velux-nibe"
-fi
 case "$1" in
 start)
-  synosystemctl start "${UNIT}"
+  if [ "${EUID}" -eq 0 ]; then
+    sudo -u veluxnibe synosystemctl start pkguser-velux-nibe
+  else
+    synosystemctl start pkguser-velux-nibe
+  fi
   ;;
 stop)
-  synosystemctl stop "${UNIT}"
+  if [ "${EUID}" -eq 0 ]; then
+    sudo -u veluxnibe synosystemctl stop pkguser-velux-nibe
+  else
+    synosystemctl stop pkguser-velux-nibe
+  fi
   ;;
 status)
-  synosystemctl get-active-status "${UNIT}"
+  if [ "${EUID}" -eq 0 ]; then
+    sudo -u veluxnibe synosystemctl get-active-status pkguser-velux-nibe
+  else
+    synosystemctl get-active-status pkguser-velux-nibe
+  fi
   ;;
 log)
   exec tail -n 100 -f "/var/packages/velux-nibe/target/velux-nibe.log"
@@ -22,4 +29,3 @@ log)
   exit 1
   ;;
 esac
-exit 0
