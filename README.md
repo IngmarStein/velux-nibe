@@ -78,6 +78,11 @@ You can customize the configuration of Velux-Nibe by using the config file at
 Please **stop** the package **before** changing the configuration.  
 If you have edited the configuration while Velux-Nibe is running, please **restart** the Velux-Nibe package.
 
+##### Logs
+
+On Synology, the service log file is located at `/var/packages/velux-nibe/target/velux-nibe.log`.
+The systemd logs can be inspected using `journalctl -u pkgctl-velux-nibe`.
+
 ### 4. Enable Smart Home mode
 
 Once `velux-nibe` is running, it is polling your thermostats in the defined interval and submits the current values (as well as the specified target temperature) to NIBE Uplink. You can verify the data in the portal in the section "My Systems > System > Smart Home > Thermostats".

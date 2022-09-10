@@ -1,13 +1,18 @@
 #!/bin/bash
+if [ "${EUID}" -eq 0 ]; then
+  UNIT="pkgctl-velux-nibe"
+else
+  UNIT="pkguser-velux-nibe"
+fi
 case "$1" in
 start)
-  synosystemctl start pkgctl-velux-nibe
+  synosystemctl start "${UNIT}"
   ;;
 stop)
-  synosystemctl stop pkgctl-velux-nibe
+  synosystemctl stop "${UNIT}"
   ;;
 status)
-  synosystemctl get-active-status pkgctl-velux-nibe
+  synosystemctl get-active-status "${UNIT}"
   ;;
 log)
   exec tail -n 100 -f "/var/packages/velux-nibe/target/velux-nibe.log"
