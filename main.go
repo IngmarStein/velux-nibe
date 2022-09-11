@@ -73,51 +73,49 @@ func main() {
 	ticker := time.NewTicker(time.Duration(*pollInterval) * time.Second)
 
 	for {
-		select {
-		case <-ticker.C:
-			homeData, err := veluxClient.GetHomesData(velux.GetHomesDataRequest{GatewayTypes: []string{velux.Bridge}})
-			if err != nil {
-				log.Printf("error getting home data: %v", err)
-				continue
+		<-ticker.C
+		homeData, err := veluxClient.GetHomesData(velux.GetHomesDataRequest{GatewayTypes: []string{velux.Bridge}})
+		if err != nil {
+			log.Printf("error getting home data: %v", err)
+			continue
+		}
+
+		for _, home := range homeData.Body.Homes {
+			roomNames := make(map[string]string)
+			for _, room := range home.Rooms {
+				roomNames[room.ID] = room.Name
 			}
 
-			for _, home := range homeData.Body.Homes {
-				roomNames := make(map[string]string)
-				for _, room := range home.Rooms {
-					roomNames[room.ID] = room.Name
+			status, err := veluxClient.HomeStatus(velux.HomeStatusRequest{
+				HomeID:      home.ID,
+				DeviceTypes: []string{velux.Sensor},
+			})
+			if err != nil {
+				log.Printf("error getting home status: %v", err)
+				continue
+			}
+			for _, room := range status.Body.Home.Rooms {
+				roomName, ok := roomNames[room.ID]
+				if !ok {
+					roomName = room.ID
 				}
 
-				status, err := veluxClient.HomeStatus(velux.HomeStatusRequest{
-					HomeID:      home.ID,
-					DeviceTypes: []string{velux.Sensor},
-				})
+				log.Printf("Home %s - room %s - temperature %d", home.Name, roomName, room.Temperature)
+				externalId, err := strconv.Atoi(room.ID)
 				if err != nil {
-					log.Printf("error getting home status: %v", err)
+					log.Printf("Home %s - room %s: failed to parse room ID: %v", home.Name, roomName, err)
 					continue
 				}
-				for _, room := range status.Body.Home.Rooms {
-					roomName, ok := roomNames[room.ID]
-					if !ok {
-						roomName = room.ID
-					}
-
-					log.Printf("Home %s - room %s - temperature %d", home.Name, roomName, room.Temperature)
-					externalId, err := strconv.Atoi(room.ID)
-					if err != nil {
-						log.Printf("Home %s - room %s: failed to parse room ID: %v", home.Name, roomName, err)
-						continue
-					}
-					err = nibeClient.SetThermostat(nibe.SetThermostatRequest{
-						SystemID:       *system,
-						ExternalId:     externalId % math.MaxInt32, // The NIBE Uplink API doesn't accept values > 2^31
-						Name:           roomName,
-						ActualTemp:     room.Temperature,
-						TargetTemp:     *targetTemp,
-						ClimateSystems: []int{1},
-					})
-					if err != nil {
-						log.Printf("Failed to set thermostat %d in room %s: %v", externalId, roomName, err)
-					}
+				err = nibeClient.SetThermostat(nibe.SetThermostatRequest{
+					SystemID:       *system,
+					ExternalId:     externalId % math.MaxInt32, // The NIBE Uplink API doesn't accept values > 2^31
+					Name:           roomName,
+					ActualTemp:     room.Temperature,
+					TargetTemp:     *targetTemp,
+					ClimateSystems: []int{1},
+				})
+				if err != nil {
+					log.Printf("Failed to set thermostat %d in room %s: %v", externalId, roomName, err)
 				}
 			}
 		}
