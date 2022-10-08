@@ -88,3 +88,9 @@ The systemd logs can be inspected using `journalctl -u pkgctl-velux-nibe`.
 Once `velux-nibe` is running, it is polling your thermostats in the defined interval and submits the current values (as well as the specified target temperature) to NIBE Uplink. You can verify the data in the portal in the section "My Systems > System > Smart Home > Thermostats".
 
 If you are happy with the results, don't forget to enable "smart home" mode in "My Systems > System > Manage > heat pump > plus functions > smart home" so that the heat pump actually uses the indoor temperatures to optimize operations.
+
+### 5. HTML Interface
+
+`velux-nibe` offers an optional HTML interface which is enabled by passing a non-zero value to the `http-port` flag. The
+HTML interface allows you to change the target temperature  without restarting the service and view the most recently
+submitted values to NIBE Uplink.

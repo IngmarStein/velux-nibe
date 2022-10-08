@@ -2,10 +2,14 @@ package main
 
 import (
 	"flag"
+	"fmt"
+	"html/template"
 	"log"
 	"math"
+	"net/http"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 	_ "time/tzdata"
 
@@ -31,6 +35,7 @@ var nibeTokenFile = flag.String("nibe-token", os.Getenv("NIBE_TOKEN"), "File nam
 var verbose = flag.Bool("verbose", false, "Verbose mode")
 var targetTemp = flag.Int("targetTemp", 210, "Target temperature in celsius, multiplied by ten")
 var pollInterval = flag.Int("interval", 60, "Polling interval in seconds")
+var httpPort = flag.Int("http-port", lenientParseInt(os.Getenv("HTTP_PORT")), "Port for HTTP interface (0 = disabled)")
 
 // https://medium.com/@mhcbinder/using-local-time-in-a-golang-docker-container-built-from-scratch-2900af02fbaf
 func updateTimezone() {
@@ -40,6 +45,102 @@ func updateTimezone() {
 		if err != nil {
 			log.Printf("error loading location '%s': %v\n", tz, err)
 		}
+	}
+}
+
+type UpdateResult struct {
+	Timestamp         time.Time
+	Name              string
+	ActualTemperature int
+	TargetTemperature int
+	Result            error
+}
+
+type SystemSettings struct {
+	Username          string
+	Password          string
+	ClientID          string
+	ClientSecret      string
+	CallbackURL       string
+	TokenFile         string
+	System            int
+	PollInterval      int
+	Verbose           bool
+	TargetTemperature int
+	HTTPPort          int
+}
+
+type SystemState struct {
+	SettingsMu sync.RWMutex
+	Settings   SystemSettings
+
+	UpdatesMu  sync.RWMutex
+	LastUpdate []UpdateResult
+}
+
+var htmlTemplate = template.Must(template.New("main").Parse(`
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Velux-Nibe</title>
+	</head>
+	<body>
+		<h1>Velux-Nibe</h1>
+		<h2>Configuration</h2>
+		<table>
+			<tr><td>Velux user</td><td>{{.Settings.Username}}</td></tr>
+			<tr><td>NIBE client ID</td><td>{{.Settings.ClientID}}</td></tr>
+			<tr><td>NIBE system</td><td>{{.Settings.System}}</td></tr>
+			<tr><td>Poll interval</td><td>{{.Settings.PollInterval}}</td></tr>
+		</table>
+		<h2>Settings</h2>
+		<form method="POST" action="/">
+			<label for="target_temperature">Target temperature:</label>
+			<input type="text" name="target_temperature" value="{{.Settings.TargetTemperature}}">
+			<input type="submit" value="submit" />
+		</form>
+		<h2>Last Update</h2>
+		{{range .LastUpdate}}
+		<h3>Room {{.Name}}</h3>
+		<table>
+			<tr><td>Timestamp</td><td>{{.Timestamp.Format "Jan 02, 2006 15:04:05 UTC"}}</td></tr>
+			<tr><td>Actual temperature</td><td>{{.ActualTemperature}}</td></tr>
+			<tr><td>Target temperature</td><td>{{.TargetTemperature}}</td></tr>
+			<tr><td>Result</td><td>{{if .Result}}{{.Result}}{{else}}success{{end}}</td></tr>
+		</table>
+		{{end}}
+  </body>
+</html>
+`))
+
+func (state *SystemState) Handler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "POST" {
+		if err := r.ParseForm(); err != nil {
+			fmt.Fprintf(w, "ParseForm() err: %v", err)
+			return
+		}
+		newTempString := r.FormValue("target_temperature")
+		newTemp, err := strconv.Atoi(newTempString)
+		if err != nil {
+			fmt.Fprintf(w, "Invalid temperature: %v", err)
+			return
+		}
+
+		if newTemp < 100 || newTemp > 300 {
+			fmt.Fprintf(w, "Invalid temperature: %d (must be between 100 (10.0 °C) and 300 (30.0 °C)", newTemp)
+			return
+		}
+
+		state.SettingsMu.Lock()
+		state.Settings.TargetTemperature = newTemp
+		state.SettingsMu.Unlock()
+	}
+
+	state.UpdatesMu.RLock()
+	defer state.UpdatesMu.RUnlock()
+
+	if err := htmlTemplate.Execute(w, state); err != nil {
+		log.Fatal(err)
 	}
 }
 
@@ -58,27 +159,53 @@ func main() {
 		os.Exit(1)
 	}
 
-	if *nibeTokenFile == "" {
-		*nibeTokenFile = "nibe-token.json"
+	state := SystemState{
+		Settings: SystemSettings{
+			Username:          *username,
+			Password:          *password,
+			ClientID:          *clientID,
+			ClientSecret:      *clientSecret,
+			CallbackURL:       *callbackURL,
+			TokenFile:         *nibeTokenFile,
+			System:            *system,
+			PollInterval:      *pollInterval,
+			Verbose:           *verbose,
+			TargetTemperature: *targetTemp,
+			HTTPPort:          *httpPort,
+		},
+	}
+
+	if state.Settings.TokenFile == "" {
+		state.Settings.TokenFile = "nibe-token.json"
 	}
 
 	log.Println("Creating NIBE client")
-	nibeClient := nibe.NewClientWithAuth(*clientID, *clientSecret, *callbackURL, *nibeTokenFile, []string{nibe.ScopeWrite})
-	nibeClient.Verbose = *verbose
+	nibeClient := nibe.NewClientWithAuth(state.Settings.ClientID, state.Settings.ClientSecret, state.Settings.CallbackURL, state.Settings.TokenFile, []string{nibe.ScopeWrite})
+	nibeClient.Verbose = state.Settings.Verbose
 
 	log.Println("Creating Velux client")
-	veluxClient := velux.NewClientWithAuth(*username, *password)
-	veluxClient.Verbose = *verbose
+	veluxClient := velux.NewClientWithAuth(state.Settings.Username, state.Settings.Password)
+	veluxClient.Verbose = state.Settings.Verbose
 
-	ticker := time.NewTicker(time.Duration(*pollInterval) * time.Second)
+	if state.Settings.HTTPPort != 0 {
+		http.HandleFunc("/", state.Handler)
+		go func() {
+			if err := http.ListenAndServe(fmt.Sprintf(":%d", state.Settings.HTTPPort), nil); err != nil {
+				log.Fatal(err)
+			}
+		}()
+	}
 
-	for {
-		<-ticker.C
+	ticker := time.NewTicker(time.Duration(state.Settings.PollInterval) * time.Second)
+
+	for ; true; <-ticker.C {
 		homeData, err := veluxClient.GetHomesData(velux.GetHomesDataRequest{GatewayTypes: []string{velux.Bridge}})
 		if err != nil {
 			log.Printf("error getting home data: %v", err)
 			continue
 		}
+
+		var updates []UpdateResult
 
 		for _, home := range homeData.Body.Homes {
 			roomNames := make(map[string]string)
@@ -106,18 +233,31 @@ func main() {
 					log.Printf("Home %s - room %s: failed to parse room ID: %v", home.Name, roomName, err)
 					continue
 				}
+				state.SettingsMu.RLock()
+				temp := state.Settings.TargetTemperature
+				state.SettingsMu.RUnlock()
 				err = nibeClient.SetThermostat(nibe.SetThermostatRequest{
 					SystemID:       *system,
 					ExternalId:     externalId % math.MaxInt32, // The NIBE Uplink API doesn't accept values > 2^31
 					Name:           roomName,
 					ActualTemp:     room.Temperature,
-					TargetTemp:     *targetTemp,
+					TargetTemp:     temp,
 					ClimateSystems: []int{1},
+				})
+				updates = append(updates, UpdateResult{
+					Timestamp:         time.Now(),
+					Name:              roomName,
+					ActualTemperature: room.Temperature,
+					TargetTemperature: temp,
+					Result:            err,
 				})
 				if err != nil {
 					log.Printf("Failed to set thermostat %d in room %s: %v", externalId, roomName, err)
 				}
 			}
+			state.UpdatesMu.Lock()
+			state.LastUpdate = updates
+			state.UpdatesMu.Unlock()
 		}
 	}
 }

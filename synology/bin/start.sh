@@ -12,4 +12,5 @@ LOG_FILE="/var/packages/velux-nibe/target/velux-nibe.log"
 exec "$SERVICE_EXEC_PATH" \
   -nibe-token "${TOKEN_FILE}" \
   -targetTemp "${TARGET_TEMP}" \
-  -interval "${POLL_INTERVAL}" > "${LOG_FILE}" 2>&1
+  -interval "${POLL_INTERVAL}" \
+  -http-port "${HTTP_PORT}" > "${LOG_FILE}" 2>&1

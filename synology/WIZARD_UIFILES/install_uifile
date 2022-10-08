@@ -88,5 +88,16 @@
                 "allowBlank": false
             }
         }]
+    }, {
+        "type": "textfield",
+        "desc": "HTTP Interface",
+        "subitems": [{
+            "key": "HTTP_PORT",
+            "desc": "Port",
+            "defaultValue": "0",
+            "validator": {
+                "allowBlank": false
+            }
+        }]
     }]
 }]
