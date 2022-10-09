@@ -11,10 +11,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
-	"reflect"
 	"strings"
-
-	"github.com/google/go-querystring/query"
 )
 
 const (
@@ -130,26 +127,18 @@ func (c *Client) do(req *http.Request, v interface{}) (*http.Response, error) {
 	return resp, err
 }
 
-// addOptions adds the parameters in opt as URL query parameters to s. opt
-// must be a struct whose fields may contain "url" tags.
-func addOptions(s string, opt interface{}) (string, error) {
-	v := reflect.ValueOf(opt)
-	if v.Kind() == reflect.Ptr && v.IsNil() {
+// setOptions set the parameters in opts as URL query parameters to s.
+func setOptions(s string, opts url.Values) (string, error) {
+	if len(opts) == 0 {
 		return s, nil
 	}
 
-	u, err := url.Parse(s)
-	if err != nil {
-		return s, err
+	encoded := opts.Encode()
+	if len(encoded) == 0 {
+		return s, nil
 	}
 
-	qs, err := query.Values(opt)
-	if err != nil {
-		return s, err
-	}
-
-	u.RawQuery = qs.Encode()
-	return u.String(), nil
+	return s + "?" + encoded, nil
 }
 
 const RollerShutter = "NXO"
@@ -175,7 +164,12 @@ type GetHomesDataResponse struct {
 }
 
 func (c *Client) GetHomesData(request GetHomesDataRequest) (GetHomesDataResponse, error) {
-	u, err := addOptions("gethomesdata", request)
+	options := url.Values{}
+	if len(request.GatewayTypes) > 0 {
+		options["gateway_types"] = request.GatewayTypes
+	}
+
+	u, err := setOptions("gethomesdata", options)
 	if err != nil {
 		return GetHomesDataResponse{}, err
 	}
@@ -219,7 +213,11 @@ type HomeStatusResponse struct {
 }
 
 func (c *Client) HomeStatus(request HomeStatusRequest) (HomeStatusResponse, error) {
-	u, err := addOptions("homestatus", request)
+	options := url.Values{}
+	options.Set("home_id", request.HomeID)
+	options["device_types"] = request.DeviceTypes
+
+	u, err := setOptions("homestatus", options)
 	if err != nil {
 		return HomeStatusResponse{}, err
 	}
