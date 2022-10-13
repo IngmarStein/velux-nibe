@@ -142,7 +142,9 @@ func (state *SystemState) Handler(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				log.Printf("Unable to write config file: %v", err)
 			} else {
-				json.NewEncoder(f).Encode(state.Settings)
+				enc := json.NewEncoder(f)
+				enc.SetIndent("", "  ")
+				enc.Encode(state.Settings)
 				f.Close()
 			}
 		}
@@ -282,7 +284,7 @@ func main() {
 				temp := state.Settings.TargetTemperature
 				state.SettingsMu.RUnlock()
 				err = nibeClient.SetThermostat(nibe.SetThermostatRequest{
-					SystemID:       *system,
+					SystemID:       state.Settings.System,
 					ExternalId:     externalId % math.MaxInt32, // The NIBE Uplink API doesn't accept values > 2^31
 					Name:           roomName,
 					ActualTemp:     room.Temperature,
