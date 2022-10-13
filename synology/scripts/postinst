@@ -2,15 +2,17 @@
 
 VELUX_NIBE_CONFIG="${SYNOPKG_PKGDEST}/velux-nibe.conf"
 cat > "${VELUX_NIBE_CONFIG}" <<EOF
-export VELUX_USERNAME="${VELUX_USERNAME}"
-export VELUX_PASSWORD="${VELUX_PASSWORD}"
-export NIBE_CLIENT_ID="${NIBE_CLIENT_ID}"
-export NIBE_CLIENT_SECRET="${NIBE_CLIENT_SECRET}"
-export NIBE_CALLBACK_URL="${NIBE_CALLBACK_URL}"
-export NIBE_SYSTEM_ID="${NIBE_SYSTEM_ID}"
-export TARGET_TEMP="${TARGET_TEMP}"
-export POLL_INTERVAL="${POLL_INTERVAL}"
-export HTTP_PORT="${HTTP_PORT}"
+{
+  "velux_user": "${VELUX_USERNAME}",
+  "velux_password": "${VELUX_PASSWORD}",
+  "nibe_client_id": "${NIBE_CLIENT_ID}",
+  "nibe_client_secret": "${NIBE_CLIENT_SECRET}",
+  "nibe_callback": "${NIBE_CALLBACK_URL}",
+  "nibe_system": ${NIBE_SYSTEM_ID},
+  "interval": ${POLL_INTERVAL},
+  "target_temperature": ${TARGET_TEMP},
+  "http_port": ${HTTP_PORT}
+}
 EOF
 
 exit 0

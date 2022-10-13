@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"html/template"
@@ -36,6 +37,7 @@ var verbose = flag.Bool("verbose", false, "Verbose mode")
 var targetTemp = flag.Int("targetTemp", 210, "Target temperature in celsius, multiplied by ten")
 var pollInterval = flag.Int("interval", 60, "Polling interval in seconds")
 var httpPort = flag.Int("http-port", lenientParseInt(os.Getenv("HTTP_PORT")), "Port for HTTP interface (0 = disabled)")
+var configFile = flag.String("conf", "", "Config file")
 
 // https://medium.com/@mhcbinder/using-local-time-in-a-golang-docker-container-built-from-scratch-2900af02fbaf
 func updateTimezone() {
@@ -57,17 +59,17 @@ type UpdateResult struct {
 }
 
 type SystemSettings struct {
-	Username          string
-	Password          string
-	ClientID          string
-	ClientSecret      string
-	CallbackURL       string
-	TokenFile         string
-	System            int
-	PollInterval      int
-	Verbose           bool
-	TargetTemperature int
-	HTTPPort          int
+	Username          string `json:"velux_user"`
+	Password          string `json:"velux_password"`
+	ClientID          string `json:"nibe_client_id"`
+	ClientSecret      string `json:"nibe_client_secret"`
+	CallbackURL       string `json:"nibe_callback"`
+	System            int    `json:"nibe_system"`
+	TokenFile         string `json:"nibe_token"`
+	PollInterval      int    `json:"interval"`
+	Verbose           bool   `json:"verbose"`
+	TargetTemperature int    `json:"target_temperature"`
+	HTTPPort          int    `json:"http_port,omitempty"`
 }
 
 type SystemState struct {
@@ -132,8 +134,18 @@ func (state *SystemState) Handler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		state.SettingsMu.Lock()
+		defer state.SettingsMu.Unlock()
 		state.Settings.TargetTemperature = newTemp
-		state.SettingsMu.Unlock()
+
+		if *configFile != "" {
+			f, err := os.OpenFile(*configFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
+			if err != nil {
+				log.Printf("Unable to write config file: %v", err)
+			} else {
+				json.NewEncoder(f).Encode(state.Settings)
+				f.Close()
+			}
+		}
 	}
 
 	state.UpdatesMu.RLock()
@@ -149,30 +161,63 @@ func main() {
 
 	flag.Parse()
 
-	if *username == "" ||
-		*password == "" ||
-		*clientID == "" ||
-		*clientSecret == "" ||
-		*callbackURL == "" ||
-		*system == 0 {
-		flag.Usage()
-		os.Exit(1)
+	state := SystemState{Settings: SystemSettings{}}
+
+	if *configFile != "" {
+		f, err := os.Open(*configFile)
+		if err != nil {
+			log.Fatalf("Failed to open config file: %v", err)
+		}
+		err = json.NewDecoder(f).Decode(&state.Settings)
+		if err != nil {
+			log.Fatalf("Failed to parse config file: %v", err)
+		}
+		f.Close()
 	}
 
-	state := SystemState{
-		Settings: SystemSettings{
-			Username:          *username,
-			Password:          *password,
-			ClientID:          *clientID,
-			ClientSecret:      *clientSecret,
-			CallbackURL:       *callbackURL,
-			TokenFile:         *nibeTokenFile,
-			System:            *system,
-			PollInterval:      *pollInterval,
-			Verbose:           *verbose,
-			TargetTemperature: *targetTemp,
-			HTTPPort:          *httpPort,
-		},
+	// command line flags override settings from the config file
+	if *username != "" {
+		state.Settings.Username = *username
+	}
+	if *password != "" {
+		state.Settings.Password = *password
+	}
+	if *clientID != "" {
+		state.Settings.ClientID = *clientID
+	}
+	if *clientSecret != "" {
+		state.Settings.ClientSecret = *clientSecret
+	}
+	if *callbackURL != "" {
+		state.Settings.CallbackURL = *callbackURL
+	}
+	if *nibeTokenFile != "" {
+		state.Settings.TokenFile = *nibeTokenFile
+	}
+	if *system != 0 {
+		state.Settings.System = *system
+	}
+	if *pollInterval != 0 {
+		state.Settings.PollInterval = *pollInterval
+	}
+	if *verbose {
+		state.Settings.Verbose = true
+	}
+	if *targetTemp != 0 {
+		state.Settings.TargetTemperature = *targetTemp
+	}
+	if *httpPort != 0 {
+		state.Settings.HTTPPort = *httpPort
+	}
+
+	if state.Settings.Username == "" ||
+		state.Settings.Password == "" ||
+		state.Settings.ClientID == "" ||
+		state.Settings.ClientSecret == "" ||
+		state.Settings.CallbackURL == "" ||
+		state.Settings.System == 0 {
+		flag.Usage()
+		os.Exit(1)
 	}
 
 	if state.Settings.TokenFile == "" {
