@@ -163,6 +163,11 @@ func main() {
 
 	flag.Parse()
 
+	var flagsPassed = make(map[string]bool)
+	flag.Visit(func(f *flag.Flag) {
+		flagsPassed[f.Name] = true
+	})
+
 	state := SystemState{Settings: SystemSettings{}}
 
 	if *configFile != "" {
@@ -199,13 +204,13 @@ func main() {
 	if *system != 0 {
 		state.Settings.System = *system
 	}
-	if *pollInterval != 0 {
+	if flagsPassed["interval"] {
 		state.Settings.PollInterval = *pollInterval
 	}
 	if *verbose {
 		state.Settings.Verbose = true
 	}
-	if *targetTemp != 0 {
+	if flagsPassed["targetTemp"] {
 		state.Settings.TargetTemperature = *targetTemp
 	}
 	if *httpPort != 0 {
