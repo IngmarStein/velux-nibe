@@ -35,7 +35,7 @@ cat <<EOF
       "silent_install": false,
       "silent_uninstall": false,
       "silent_upgrade": true,
-      "auto_upgrade_from": null
+      "auto_upgrade_from": ""
     }
   ]
 }
