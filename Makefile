@@ -4,7 +4,7 @@ GOCLEAN=$(GOCMD) clean
 GOTEST=$(GOCMD) test
 BINARY_NAME=velux-nibe
 
-.phony: all test clean
+.phony: all test clean update
 
 all: test $(BINARY_NAME)
 
@@ -17,6 +17,10 @@ test:
 clean:
 	$(GOCLEAN)
 	rm -f $(BINARY_NAME)
+
+update:
+	go get -u
+	go mod tidy
 
 docker-build: $(BINARY_NAME) Dockerfile
 	DOCKER_BUILDKIT=1 docker build .
