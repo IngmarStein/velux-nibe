@@ -280,6 +280,10 @@ func main() {
 				}
 
 				log.Printf("Home %s - room %s - temperature %d", home.Name, roomName, room.Temperature)
+				if room.Temperature == 0 {
+					log.Printf("Home %s - room %s - skipping", home.Name, roomName)
+				}
+
 				externalId, err := strconv.Atoi(room.ID)
 				if err != nil {
 					log.Printf("Home %s - room %s: failed to parse room ID: %v", home.Name, roomName, err)
