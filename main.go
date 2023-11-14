@@ -282,6 +282,7 @@ func main() {
 				log.Printf("Home %s - room %s - temperature %d", home.Name, roomName, room.Temperature)
 				if room.Temperature == 0 {
 					log.Printf("Home %s - room %s - skipping", home.Name, roomName)
+					continue
 				}
 
 				externalId, err := strconv.Atoi(room.ID)
