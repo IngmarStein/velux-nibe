@@ -2,7 +2,7 @@ module github.com/ingmarstein/velux-nibe
 
 go 1.21
 
-require golang.org/x/oauth2 v0.15.0
+require golang.org/x/oauth2 v0.16.0
 
 require (
 	github.com/golang/protobuf v1.5.3 // indirect
