@@ -1,4 +1,4 @@
-FROM golang:1.22.3-alpine AS builder
+FROM golang:1.22.4-alpine AS builder
 WORKDIR /go/src/github.com/ingmarstein/velux-nibe/
 COPY . .
 RUN apk add -U --no-cache ca-certificates git \
